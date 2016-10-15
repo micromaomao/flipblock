@@ -5,7 +5,7 @@ function round (float) {
 }
 
 class FlipBlock {
-  constructor (scene) {
+  constructor (scene, textures) {
     this._scene = scene
     this._groundBlocks = []
     this._maxX = 18
@@ -24,7 +24,7 @@ class FlipBlock {
 
     this._groundMaterial = new THREE.MeshLambertMaterial({color: 0xeeeeee})
     this._groundTargetMaterial = new THREE.MeshLambertMaterial({color: 0x4caf50})
-    this._groundGeo = new THREE.BoxGeometry(0.95, 0.95, this.groundDepth)
+    this._groundGeo = new THREE.BoxGeometry(0.97, 0.97, this.groundDepth)
 
     this._currentLevel = 0
 
@@ -32,7 +32,7 @@ class FlipBlock {
     let boxDim = this._boxDim
     this._boxFaceVect = {wh: new THREE.Vector3(0, 0, -boxDim.d / 2), wd: new THREE.Vector3(0, -boxDim.h / 2, 0), hd: new THREE.Vector3(-boxDim.w, 0, 0)}
 
-    this._boxMaterial = new THREE.MeshPhongMaterial({color: 0x795548})
+    this._boxMaterial = new THREE.MeshPhongMaterial({color: 0x795548, map: textures.wood})
     this._boxContainer = new THREE.Object3D()
     this._box = new THREE.Mesh(new THREE.BoxGeometry(boxDim.w, boxDim.h, boxDim.d), this._boxMaterial)
     this._boxContainer.add(this._box)
@@ -46,12 +46,13 @@ class FlipBlock {
 
     this.nextLevel()
   }
-  initBox () {
-    if (this._transforming) throw new Error('Can not init box while transforming.')
+  initBox (tr) {
+    if (!tr && this._transforming) throw new Error('Can not init box while transforming.')
     this._transforming = true
     this._boxContainer.rotation.set(0, 0, 0)
     this._boxContainer.position.copy(this._initialBoxPos)
     this.animation(3, this._boxContainer.position.z, 200, () => {
+      if (tr) return
       this._transforming = false
     }, v => {
       this._boxContainer.position.setZ(v)
@@ -294,8 +295,7 @@ class FlipBlock {
       if (ret) return
       let [x, y] = co
       if (x < 0 || y < 0) {
-        this.fail()
-        ret = true
+        emptySpace ++
         return
       }
       if (this._groundBlocks[x][y] === null) {
@@ -316,7 +316,8 @@ class FlipBlock {
     }
   }
   fail () {
-    this.initBox()
+    this.doBrickAnimation()
+    this.initBox(true)
   }
   success () {
     this._currentLevel ++
@@ -333,82 +334,101 @@ class FlipBlock {
     }
   }
   nextLevel () {
+    if (this._transforming) throw new Error('State not stable')
+    this._transforming = true
     this.clearAll()
-    this.initBox()
+    this.initBox(true)
     let lv = this._currentLevel
     FlipBlock_Levels[lv](this)
+    this.doBrickAnimation()
+  }
+  doBrickAnimation () {
+    let ani = 0
+    for (let i = 0; i <= this.maxX; i ++) {
+      for (let j = 0; j <= this.maxY; j ++) {
+        let gb = this._groundBlocks[i][j]
+        if (gb) {
+          let nPos = gb.mesh.position.z
+          ani++
+          this.animation(-5, nPos, Math.floor(Math.random() * 200 + 200), () => {
+            ani--
+            if (ani === 0) {
+              this._transforming = false
+            }
+          }, v => {
+            if (!this._transforming) {
+              throw new Error('Something goes wrong.')
+            }
+            gb.mesh.position.z = v
+          })
+        }
+      }
+    }
   }
 }
 
-let fb = new FlipBlock(scene)
+let onTextureLoad = textures => {
+  let fb = new FlipBlock(scene, textures)
 
-let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
-let renderer = new THREE.WebGLRenderer({
-  antialias: true
-})
+  let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
+  let renderer = new THREE.WebGLRenderer({
+    antialias: true
+  })
 
-function handleResize () {
-  let wid = window.innerWidth
-  let hig = window.innerHeight
-  camera.aspect = wid / hig
-  camera.updateProjectionMatrix()
-  renderer.setSize(wid, hig)
+  function handleResize () {
+    let wid = window.innerWidth
+    let hig = window.innerHeight
+    camera.aspect = wid / hig
+    camera.updateProjectionMatrix()
+    renderer.setSize(wid, hig)
+  }
+
+  renderer.setClearColor(0x2e3146)
+
+  handleResize()
+  window.addEventListener('resize', handleResize)
+
+  function doRender () {
+    requestAnimationFrame(doRender)
+    let wp = fb._box.getWorldPosition()
+    camera.position.setX(wp.x / 2 + 3)
+    camera.position.setY(wp.y / 2 - 5)
+    renderer.render(scene, camera)
+  }
+
+  Object.assign(document.body.style, {
+    margin: '0',
+    padding: '0',
+    overflow: 'hidden'
+  })
+  document.body.appendChild(renderer.domElement)
+
+  camera.position.set(8, -5, 6)
+  camera.rotation.set(Math.PI / 3, 0, 0)
+
+  let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1)
+  scene.add(light)
+
+  doRender()
+
+  window.addEventListener('keydown', evt => {
+    console.log(evt.key)
+    if (evt.key === 'ArrowLeft') {
+      fb.turnLeft()
+    }
+    if (evt.key === 'ArrowRight') {
+      fb.turnRight()
+    }
+    if (evt.key === 'ArrowUp') {
+      fb.turnUp()
+    }
+    if (evt.key === 'ArrowDown') {
+      fb.turnDown()
+    }
+  })
 }
 
-handleResize()
-window.addEventListener('resize', handleResize)
-
-function doRender () {
-  requestAnimationFrame(doRender)
-  let wp = fb._box.getWorldPosition()
-  camera.position.setX(wp.x / 2 + 3)
-  camera.position.setY(wp.y / 2 - 5)
-  renderer.render(scene, camera)
-}
-
-Object.assign(document.body.style, {
-  margin: '0',
-  padding: '0',
-  overflow: 'hidden'
+let textureLoader = new THREE.TextureLoader()
+textureLoader.load('wood.png', wood => {
+  onTextureLoad({wood: wood})
 })
-document.body.appendChild(renderer.domElement)
-
-camera.position.set(8, -5, 6)
-camera.rotation.set(Math.PI / 3, 0, 0)
-
-let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1)
-scene.add(light)
-
-doRender()
-
-window.addEventListener('keydown', evt => {
-  console.log(evt.key)
-  if (evt.key === 'ArrowLeft') {
-    fb.turnLeft()
-  }
-  if (evt.key === 'ArrowRight') {
-    fb.turnRight()
-  }
-  if (evt.key === 'ArrowUp') {
-    fb.turnUp()
-  }
-  if (evt.key === 'ArrowDown') {
-    fb.turnDown()
-  }
-})
-
-// ;(() => {
-//   let x = new THREE.Object3D()
-//   x.position.set(0, 0, 0)
-//   let y = new THREE.Object3D()
-//   y.position.set(0, 5, 0)
-//   x.add(y)
-//   scene.add(x)
-//   x.rotateZ(Math.PI / 2)
-//   x.updateMatrixWorld()
-//   y.updateMatrixWorld()
-//   let pos = y.getWorldPosition()
-//   let rot = y.getWorldRotation()
-//   console.info(pos)
-//   console.info(rot)
-// })()
