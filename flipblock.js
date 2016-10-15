@@ -5,7 +5,7 @@ function round (float) {
 }
 
 class FlipBlock {
-  constructor (scene, textures) {
+  constructor (scene, textures, initLevel, onLevelChange) {
     this._scene = scene
     this._groundBlocks = []
     this._maxX = 18
@@ -26,7 +26,11 @@ class FlipBlock {
     this._groundTargetMaterial = new THREE.MeshLambertMaterial({color: 0x4caf50})
     this._groundGeo = new THREE.BoxGeometry(0.97, 0.97, this.groundDepth)
 
-    this._currentLevel = 0
+    this._currentLevel = initLevel || 0
+    if (this._currentLevel >= FlipBlock_Levels.length) {
+      this._currentLevel = 0
+    }
+    this._onLevelChange = onLevelChange
 
     this._boxDim = {w: 1, h: 1, d: 2}
     let boxDim = this._boxDim
@@ -341,6 +345,7 @@ class FlipBlock {
     let lv = this._currentLevel
     FlipBlock_Levels[lv](this)
     this.doBrickAnimation()
+    if (this._onLevelChange) this._onLevelChange(lv)
   }
   doBrickAnimation () {
     let ani = 0
@@ -368,7 +373,15 @@ class FlipBlock {
 }
 
 let onTextureLoad = textures => {
-  let fb = new FlipBlock(scene, textures)
+  let ha = window.location.hash
+  let hashMatch = ha.match(/^#l(\d+)$/)
+  let initLevel = 0
+  if (hashMatch) {
+    initLevel = parseInt(hashMatch[1])
+  }
+  let fb = new FlipBlock(scene, textures, initLevel, lv => {
+    window.location = '#l' + lv
+  })
 
   let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
   let renderer = new THREE.WebGLRenderer({
