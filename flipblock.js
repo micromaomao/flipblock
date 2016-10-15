@@ -26,13 +26,7 @@ class FlipBlock {
     this._groundTargetMaterial = new THREE.MeshLambertMaterial({color: 0x4caf50})
     this._groundGeo = new THREE.BoxGeometry(0.95, 0.95, this.groundDepth)
 
-    this.groundDrawRect(0, 0, 5, 5)
-    this.groundDrawRect(3, 3, 5, 5)
-    this.groundDrawRect(6, 6, 5, 5)
-    this.groundEraseRect(5, 5, 2, 2)
-    this.clearGroundBlock(2, 2)
-    this.buildGroundTarget(10, 10)
-    this._difficulty = 1
+    this._currentLevel = 0
 
     this._boxDim = {w: 1, h: 1, d: 2}
     let boxDim = this._boxDim
@@ -46,9 +40,11 @@ class FlipBlock {
     this._boxContainer.position.copy(this._initialBoxPos)
     scene.add(this._boxContainer)
 
-    this._boxLight = new THREE.PointLight(0xffffff, 0.3, 30)
+    this._boxLight = new THREE.PointLight(0xffffff, 1, 20)
     this._boxLight.position.set(0.5, 0.5, boxDim.d + 2)
     scene.add(this._boxLight)
+
+    this.nextLevel()
   }
   initBox () {
     if (this._transforming) throw new Error('Can not init box while transforming.')
@@ -290,6 +286,7 @@ class FlipBlock {
   }
 
   postTurn () {
+    this._boxLight.position.set(this._boxContainer.position.x, this._boxContainer.position.y, this._boxDim.d + 2)
     let faces = this.getDownFaceCoords()
     let emptySpace = 0
     let ret = false
@@ -322,9 +319,10 @@ class FlipBlock {
     this.initBox()
   }
   success () {
-    this.newLevel()
+    this._currentLevel ++
+    this.nextLevel()
   }
-  newLevel () {
+  clearAll () {
     for (let i = 0; i <= this.maxX; i ++) {
       for (let j = 0; j <= this.maxY; j ++) {
         if (this._groundBlocks[i][j]) {
@@ -333,19 +331,12 @@ class FlipBlock {
         this._groundBlocks[i][j] = null
       }
     }
-    for(let i = 0; i < 15*15/5; i ++) {
-      let rx = Math.floor(Math.random() * this._maxX)
-      let ry = Math.floor(Math.random() * this._maxY)
-      this.groundDrawRect(rx, ry,
-        Math.min(this._maxX - rx, Math.floor(Math.random() * 20)), Math.min(this._maxY - ry, Math.floor(Math.random() * 20)))
-    }
-    for (let i = 0; i < 20*this._difficulty; i ++) {
-      this.clearGroundBlock(Math.floor(Math.random() * this._maxX), Math.floor(Math.random() * this._maxY))
-    }
-    this.groundDrawRect(0, 0, 3, 3)
-    this.buildGroundTarget(Math.floor(Math.random() * this._maxX), Math.floor(Math.random() * this._maxY))
+  }
+  nextLevel () {
+    this.clearAll()
     this.initBox()
-    this._difficulty ++
+    let lv = this._currentLevel
+    FlipBlock_Levels[lv](this)
   }
 }
 
@@ -369,6 +360,9 @@ window.addEventListener('resize', handleResize)
 
 function doRender () {
   requestAnimationFrame(doRender)
+  let wp = fb._box.getWorldPosition()
+  camera.position.setX(wp.x / 2 + 3)
+  camera.position.setY(wp.y / 2 - 5)
   renderer.render(scene, camera)
 }
 
@@ -382,7 +376,7 @@ document.body.appendChild(renderer.domElement)
 camera.position.set(8, -5, 6)
 camera.rotation.set(Math.PI / 3, 0, 0)
 
-let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1.5)
+let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1)
 scene.add(light)
 
 doRender()
