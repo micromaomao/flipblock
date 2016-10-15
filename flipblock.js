@@ -8,8 +8,8 @@ class FlipBlock {
   constructor (scene) {
     this._scene = scene
     this._groundBlocks = []
-    this._maxX = 40
-    this._maxY = 30
+    this._maxX = 18
+    this._maxY = 15
     this._groundDepth = 0.05
     for (let i = 0; i <= this.maxX; i ++) {
       this._groundBlocks[i] = []
@@ -32,6 +32,7 @@ class FlipBlock {
     this.groundEraseRect(5, 5, 2, 2)
     this.clearGroundBlock(2, 2)
     this.buildGroundTarget(10, 10)
+    this._difficulty = 1
 
     this._boxDim = {w: 1, h: 1, d: 2}
     let boxDim = this._boxDim
@@ -123,7 +124,7 @@ class FlipBlock {
     }
     let {mesh: box} = this._groundBlocks[x][y]
     this._ground.remove(box)
-    this._groundBlocks[x][y] = 0
+    this._groundBlocks[x][y] = null
   }
   startBoxTransform (centerX, centerY, centerZ) {
     if (this._transforming) {
@@ -301,9 +302,6 @@ class FlipBlock {
         return
       }
       if (this._groundBlocks[x][y] === null) {
-        this.fail()
-        ret = true
-      } else if (this._groundBlocks[x][y] === 0) {
         emptySpace ++
       }
     })
@@ -323,7 +321,32 @@ class FlipBlock {
   fail () {
     this.initBox()
   }
-  success () {}
+  success () {
+    this.newLevel()
+  }
+  newLevel () {
+    for (let i = 0; i <= this.maxX; i ++) {
+      for (let j = 0; j <= this.maxY; j ++) {
+        if (this._groundBlocks[i][j]) {
+          this.clearGroundBlock(i, j)
+        }
+        this._groundBlocks[i][j] = null
+      }
+    }
+    for(let i = 0; i < 15*15/5; i ++) {
+      let rx = Math.floor(Math.random() * this._maxX)
+      let ry = Math.floor(Math.random() * this._maxY)
+      this.groundDrawRect(rx, ry,
+        Math.min(this._maxX - rx, Math.floor(Math.random() * 20)), Math.min(this._maxY - ry, Math.floor(Math.random() * 20)))
+    }
+    for (let i = 0; i < 20*this._difficulty; i ++) {
+      this.clearGroundBlock(Math.floor(Math.random() * this._maxX), Math.floor(Math.random() * this._maxY))
+    }
+    this.groundDrawRect(0, 0, 3, 3)
+    this.buildGroundTarget(Math.floor(Math.random() * this._maxX), Math.floor(Math.random() * this._maxY))
+    this.initBox()
+    this._difficulty ++
+  }
 }
 
 let fb = new FlipBlock(scene)
@@ -356,8 +379,8 @@ Object.assign(document.body.style, {
 })
 document.body.appendChild(renderer.domElement)
 
-camera.position.set(2.5, -5, 6)
-camera.rotation.set(Math.PI / 3, Math.PI / -12, 0)
+camera.position.set(8, -5, 6)
+camera.rotation.set(Math.PI / 3, 0, 0)
 
 let light = new THREE.HemisphereLight(0xffffff, 0x222222, 1.5)
 scene.add(light)
