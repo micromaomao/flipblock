@@ -106,6 +106,7 @@ class FlipBlock {
     if (this._groundBlocks[x][y]) {
       this.clearGroundBlock(x, y)
       this.buildGroundTarget(x, y)
+      return
     }
     let geo = this._groundGeo
     let box = new THREE.Mesh(geo, this._groundTargetMaterial)
