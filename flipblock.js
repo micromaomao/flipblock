@@ -93,15 +93,21 @@ class FlipBlock {
       }
     }
   }
-  buildGroundBlock (x, y) {
+  buildGroundBlock (x, y, props) {
+    props = props || {}
     if (x >= this.maxX || y >= this.maxY) {
       throw new Error('coordinate out of range')
     }
     if (this._groundBlocks[x][y]) {
-      return
+      return this.buildGroundBlock.bind(this)
     }
     let geo = this._groundGeo
-    let box = new THREE.Mesh(geo, this._groundMaterial)
+    let material = this._groundMaterial
+    if (Number.isSafeInteger(props.color)) {
+      material = material.clone()
+      material.color = new THREE.Color(props.color)
+    }
+    let box = new THREE.Mesh(geo, material)
     box.position.set(x + 0.5, y + 0.5, 0)
     this._groundBlocks[x][y] = {geometry: geo, mesh: box}
     this._ground.add(box)

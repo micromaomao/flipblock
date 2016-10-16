@@ -4,6 +4,15 @@ const FlipBlock_Levels = [
     fb.buildGroundTarget(3, 1)
   },
   fb => {
+    fb.groundDrawRect(0, 0, 5, 3)
+    fb.buildGroundTarget(4, 1)
+  },
+  fb => {
+    fb.groundDrawRect(0, 0, 5, 3)
+    fb.clearGroundBlock(3, 1)
+    fb.buildGroundTarget(4, 1)
+  },
+  fb => {
     fb.groundDrawRect(0, 0, 5, 5)
     fb.groundDrawRect(3, 3, 5, 5)
     fb.groundDrawRect(6, 6, 5, 5)
@@ -46,6 +55,23 @@ const FlipBlock_Levels = [
     fb.buildGroundTarget(3, 3)
   },
   function* (fb) {
+    fb.groundDrawRect(0, 0, 10, 10)
+    fb.buildGroundTarget(9, 8)
+    while(true) {
+      if (fb._transforming) {
+        yield
+        continue
+      }
+      let wo = fb.getDownFaceCoords()
+      wo.forEach(v => {
+        let [x, y] = v
+        if (x === 9 && y === 8) return
+        fb.clearGroundBlock(x, y)
+      })
+      yield
+    }
+  },
+  function* (fb) {
     fb.groundDrawRect(0, 0, 5, 5)
     let lastTarget = [0, 0]
     let lastDate = Date.now()
@@ -62,19 +88,24 @@ const FlipBlock_Levels = [
     }
   },
   function* (fb) {
-    fb.groundDrawRect(0, 0, 10, 10)
-    fb.buildGroundTarget(9, 8)
+    fb.groundDrawRect(1, 2, 6, 1)
+    fb.groundEraseRect(2, 2, 4, 1)
+    fb.clearGroundBlock(2, 1)
+    fb.clearGroundBlock(1, 2)
+    fb.buildGroundBlock(3, 4)(4, 4)(0, 2)(6, 5)(0, 3)(0, 4)(2, 1)(5, 4)(6, 3)(5, 3)(6, 4)
+    fb.buildGroundBlock(5, 5, {color: 0x222222})
+    fb.groundDrawRect(1, 4, 2, 1)
+    fb.groundDrawRect(0, 0, 4, 1)
+    fb.buildGroundTarget(3, 2)
     while(true) {
       if (fb._transforming) {
         yield
         continue
       }
-      let wo = fb.getDownFaceCoords()
-      wo.forEach(v => {
-        let [x, y] = v
-        if (x === 9 && y === 8) return
-        fb.clearGroundBlock(x, y)
-      })
+      let fd = fb.getDownFaceCoords()
+      if (fd.length === 1 && fd.find(v => v[0] === 5 && v[1] === 5)) {
+        fb.fail()
+      }
       yield
     }
   },
