@@ -300,7 +300,7 @@ class FlipBlock {
     faces.forEach(co => {
       if (ret) return
       let [x, y] = co
-      if (x < 0 || y < 0) {
+      if (x < 0 || y < 0 || x >= this._maxX || y >= this._maxY) {
         emptySpace ++
         return
       }
