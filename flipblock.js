@@ -390,6 +390,7 @@ let onTextureLoad = textures => {
   let fb = new FlipBlock(scene, textures, initLevel, lv => {
     window.location = '#l' + lv
   }, () => {
+    auds[audt].currentTime = 0
     auds[audt].play()
     audt = (audt + 1) % auds.length
   })
