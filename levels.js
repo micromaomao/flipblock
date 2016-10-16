@@ -1,3 +1,7 @@
+const Colors = {
+  FAIL_ON_STAND: 0x222222,
+  VANISH_ON_TOUCH: 0xf1ca4f
+}
 const FlipBlock_Levels = [
   fb => {
     fb.groundDrawRect(0, 0, 5, 3)
@@ -55,7 +59,49 @@ const FlipBlock_Levels = [
     fb.buildGroundTarget(3, 3)
   },
   function* (fb) {
-    fb.groundDrawRect(0, 0, 10, 10)
+    fb.groundDrawRect(1, 2, 6, 1)
+    fb.groundEraseRect(2, 2, 4, 1)
+    fb.clearGroundBlock(2, 1)
+    fb.clearGroundBlock(1, 2)
+    fb.buildGroundBlock(3, 4)(4, 4)(0, 2)(6, 5)(0, 3)(0, 4)(2, 1)(5, 4)(6, 3)(5, 3)(6, 4)
+    fb.buildGroundBlock(5, 5, {color: Colors.FAIL_ON_STAND})
+    fb.groundDrawRect(1, 4, 2, 1)
+    fb.groundDrawRect(0, 0, 4, 1)
+    fb.buildGroundTarget(3, 2)
+    while (true) {
+      if (fb._transforming) {
+        yield
+        continue
+      }
+      let fd = fb.getDownFaceCoords()
+      if (fd.length === 1 && fd.find(([,, v]) => v.color === Colors.FAIL_ON_STAND)) {
+        fb.fail()
+      }
+      yield
+    }
+  },
+  function* (fb) {
+    fb.groundDrawRect(0, 0, 5, 3)
+    fb.groundEraseRect(1, 1, 3, 1)
+    fb.buildGroundTarget(2, 2)
+    let vanish = {color: Colors.VANISH_ON_TOUCH}
+    fb.buildGroundBlock(0, 1, vanish)(0, 2, vanish)(1, 2, vanish)
+    while (true) {
+      if (fb._transforming) {
+        yield
+        continue
+      }
+      let fd = fb.getDownFaceCoords()
+      fd.forEach(([x, y, v]) => {
+        if (v && v.color === Colors.VANISH_ON_TOUCH) {
+          fb.clearGroundBlock(x, y)
+        }
+      })
+      yield
+    }
+  },
+  function* (fb) {
+    fb.groundDrawRect(0, 0, 10, 10, {color: Colors.VANISH_ON_TOUCH})
     fb.buildGroundTarget(9, 8)
     while(true) {
       if (fb._transforming) {
@@ -83,28 +129,6 @@ const FlipBlock_Levels = [
         fb.buildGroundBlock(...lastTarget)
         lastTarget = [Math.floor(Math.random() * 5), Math.floor(Math.random() * 5)]
         fb.buildGroundTarget(...lastTarget)
-      }
-      yield
-    }
-  },
-  function* (fb) {
-    fb.groundDrawRect(1, 2, 6, 1)
-    fb.groundEraseRect(2, 2, 4, 1)
-    fb.clearGroundBlock(2, 1)
-    fb.clearGroundBlock(1, 2)
-    fb.buildGroundBlock(3, 4)(4, 4)(0, 2)(6, 5)(0, 3)(0, 4)(2, 1)(5, 4)(6, 3)(5, 3)(6, 4)
-    fb.buildGroundBlock(5, 5, {color: 0x222222})
-    fb.groundDrawRect(1, 4, 2, 1)
-    fb.groundDrawRect(0, 0, 4, 1)
-    fb.buildGroundTarget(3, 2)
-    while(true) {
-      if (fb._transforming) {
-        yield
-        continue
-      }
-      let fd = fb.getDownFaceCoords()
-      if (fd.length === 1 && fd.find(v => v[0] === 5 && v[1] === 5)) {
-        fb.fail()
       }
       yield
     }

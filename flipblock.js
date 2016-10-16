@@ -79,10 +79,10 @@ class FlipBlock {
   get groundDepth () {
     return this._groundDepth
   }
-  groundDrawRect (x, y, w, h) {
+  groundDrawRect (x, y, w, h, props) {
     for (let i = x; i < x + w; i ++) {
       for (let j = y; j < y + h; j ++) {
-        this.buildGroundBlock(i, j)
+        this.buildGroundBlock(i, j, props)
       }
     }
   }
@@ -99,18 +99,22 @@ class FlipBlock {
       throw new Error('coordinate out of range')
     }
     if (this._groundBlocks[x][y]) {
-      return this.buildGroundBlock.bind(this)
+      this.clearGroundBlock(x, y)
+      return this.buildGroundBlock(x, y, props)
     }
     let geo = this._groundGeo
     let material = this._groundMaterial
+    let blockObj = {geometry: geo, material}
     if (Number.isSafeInteger(props.color)) {
       material = material.clone()
       material.color = new THREE.Color(props.color)
+      blockObj.color = props.color
     }
     let box = new THREE.Mesh(geo, material)
+    blockObj.mesh = box
     box.position.set(x + 0.5, y + 0.5, 0)
-    this._groundBlocks[x][y] = {geometry: geo, mesh: box}
     this._ground.add(box)
+    this._groundBlocks[x][y] = blockObj
     return this.buildGroundBlock.bind(this)
   }
   buildGroundTarget (x, y) {
@@ -216,7 +220,7 @@ class FlipBlock {
     let pts = []
     for (let i = tl.x; i < dr.x; i ++) {
       for (let j = tl.y; j < dr.y; j ++) {
-        pts.push([i, j])
+        pts.push([i, j, (this._groundBlocks[i] ? this._groundBlocks[i][j] : null)])
       }
     }
     return pts
