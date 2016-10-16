@@ -407,7 +407,7 @@ let onTextureLoad = textures => {
     renderer.setSize(wid, hig)
   }
 
-  renderer.setClearColor(0x2e3146)
+  renderer.setClearColor(0xebe8e7)
 
   handleResize()
   window.addEventListener('resize', handleResize)
