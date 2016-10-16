@@ -62,6 +62,10 @@ class FlipBlock {
     }, v => {
       this._boxContainer.position.setZ(v)
     })
+    if (this._steped && this._steped.length > 0) {
+      console.log('fb.buildGroundBlock' + this._steped.map(v => `(${v.x}, ${v.y})`).join(''))
+    }
+    this._steped = []
   }
   get maxX () {
     return this._maxX
@@ -101,6 +105,7 @@ class FlipBlock {
     box.position.set(x + 0.5, y + 0.5, 0)
     this._groundBlocks[x][y] = {geometry: geo, mesh: box}
     this._ground.add(box)
+    return this.buildGroundBlock.bind(this)
   }
   buildGroundTarget (x, y) {
     if (x >= this.maxX || y >= this.maxY) {
@@ -300,6 +305,11 @@ class FlipBlock {
     faces.forEach(co => {
       if (ret) return
       let [x, y] = co
+      let st = this._steped.find(v => v.x === x && v.y === y)
+      if (!st) {
+        console.log(`fb.buildGroundBlock(${x}, ${y})`)
+        this._steped.push({x, y})
+      }
       if (x < 0 || y < 0 || x >= this._maxX || y >= this._maxY) {
         emptySpace ++
         return
@@ -342,10 +352,23 @@ class FlipBlock {
   nextLevel () {
     if (this._transforming) throw new Error('State not stable')
     this._transforming = true
+    if (this._isGenerating) {
+      clearInterval(this._generatorInterval)
+      this._isGenerating = false
+    }
     this.clearAll()
     this.initBox(true)
     let lv = this._currentLevel
-    FlipBlock_Levels[lv](this)
+    let gen = FlipBlock_Levels[lv](this)
+    if (!gen || !gen.next) {
+      this._isGenerating = false
+    } else {
+      this._isGenerating = true
+      this._generatorInterval = setInterval(() => {
+        gen.next()
+      }, 100)
+      gen.next()
+    }
     this.doBrickAnimation()
     if (this._onLevelChange) this._onLevelChange(lv)
   }
@@ -437,7 +460,6 @@ let onTextureLoad = textures => {
   doRender()
 
   window.addEventListener('keydown', evt => {
-    console.log(evt.key)
     if (evt.key === 'ArrowLeft') {
       fb.turnLeft()
     }

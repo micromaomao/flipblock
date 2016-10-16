@@ -28,10 +28,34 @@ const FlipBlock_Levels = [
     fb.buildGroundTarget(1, 2)
   },
   fb => {
-    fb.groundDrawRect(0, 0, 15, 15)
-    fb.groundEraseRect(3, 2, 1, 5)
-    fb.groundEraseRect(3, 2, 3, 1)
-    fb.groundEraseRect(3, 4, 2, 1)
-    fb.groundEraseRect(3, 6, 3, 1)
+    fb.buildGroundBlock(0, 0)(0, 1)(0, 2)(1, 1)(1, 2)(1, 3)(1, 4)(1, 5)(1, 6)(2, 6)(4, 6)(4, 4)(4, 5)(3, 3)(3, 1)(3, 2)(4, 1)(4, 2)(5, 1)(5, 2)(6, 1)(6, 2)(6, 3)(6, 4)(6, 5)(6, 6)(6, 7)(6, 8)(5, 7)(5, 8)(5, 6)(5, 4)(5, 5)
+    fb.buildGroundTarget(5, 5)
+    fb.groundEraseRect(3, 1, 4, 4)
+    fb.groundEraseRect(0, 6, 1, 9)
+  },
+  fb => {
+    fb.buildGroundBlock(0, 0)(1, 0)(1, 1)(0, 2)(2, 0)
+    fb.buildGroundTarget(2, 2)
+  },
+  function* (fb) {
+    fb.groundDrawRect(0, 0, 5, 5)
+    let lastTarget = [0, 0]
+    let lastDate = Date.now()
+    while (true) {
+      let now = Date.now()
+      if (now - lastDate >= 500) {
+        lastDate = now
+        fb.clearGroundBlock(...lastTarget)
+        fb.buildGroundBlock(...lastTarget)
+        lastTarget = [Math.floor(Math.random() * 5), Math.floor(Math.random() * 5)]
+        fb.buildGroundTarget(...lastTarget)
+      }
+      yield
+    }
+  },
+  fb => {
+    // This level is impossible to beat.
+    fb.buildGroundBlock(0, 0)(1, 0)(1, 1)(0, 2)
+    fb.buildGroundTarget(2, 2)
   }
 ]
