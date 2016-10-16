@@ -37,6 +37,14 @@ const FlipBlock_Levels = [
     fb.buildGroundBlock(0, 0)(1, 0)(1, 1)(0, 2)(2, 0)
     fb.buildGroundTarget(2, 2)
   },
+  fb => {
+    fb.buildGroundBlock(0, 0)(0, 1)
+    fb.groundDrawRect(1, 1, 6, 6)
+    fb.groundEraseRect(2, 2, 3, 3)
+    fb.clearGroundBlock(3, 1)
+    fb.clearGroundBlock(3, 5)
+    fb.buildGroundTarget(3, 3)
+  },
   function* (fb) {
     fb.groundDrawRect(0, 0, 5, 5)
     let lastTarget = [0, 0]
@@ -50,6 +58,23 @@ const FlipBlock_Levels = [
         lastTarget = [Math.floor(Math.random() * 5), Math.floor(Math.random() * 5)]
         fb.buildGroundTarget(...lastTarget)
       }
+      yield
+    }
+  },
+  function* (fb) {
+    fb.groundDrawRect(0, 0, 10, 10)
+    fb.buildGroundTarget(9, 8)
+    while(true) {
+      if (fb._transforming) {
+        yield
+        continue
+      }
+      let wo = fb.getDownFaceCoords()
+      wo.forEach(v => {
+        let [x, y] = v
+        if (x === 9 && y === 8) return
+        fb.clearGroundBlock(x, y)
+      })
       yield
     }
   },

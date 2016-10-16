@@ -332,8 +332,7 @@ class FlipBlock {
     }
   }
   fail () {
-    this.doBrickAnimation()
-    this.initBox(true)
+    this.nextLevel()
   }
   success () {
     this._currentLevel ++
@@ -366,7 +365,7 @@ class FlipBlock {
       this._isGenerating = true
       this._generatorInterval = setInterval(() => {
         gen.next()
-      }, 100)
+      })
       gen.next()
     }
     this.doBrickAnimation()
