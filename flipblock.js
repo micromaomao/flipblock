@@ -5,7 +5,7 @@ function round (float) {
 }
 
 class FlipBlock {
-  constructor (scene, textures, initLevel, onLevelChange) {
+  constructor (scene, textures, initLevel, onLevelChange, onWoodHit) {
     this._scene = scene
     this._groundBlocks = []
     this._maxX = 18
@@ -31,6 +31,7 @@ class FlipBlock {
       this._currentLevel = 0
     }
     this._onLevelChange = onLevelChange
+    this._onWoodHit = onWoodHit
 
     this._boxDim = {w: 1, h: 1, d: 2}
     let boxDim = this._boxDim
@@ -292,6 +293,7 @@ class FlipBlock {
 
   postTurn () {
     this._boxLight.position.set(this._boxContainer.position.x, this._boxContainer.position.y, this._boxDim.d + 2)
+    if (this._onWoodHit) this._onWoodHit()
     let faces = this.getDownFaceCoords()
     let emptySpace = 0
     let ret = false
@@ -379,8 +381,17 @@ let onTextureLoad = textures => {
   if (hashMatch) {
     initLevel = parseInt(hashMatch[1])
   }
+  let auds = [0, 1, 2].map(x => {
+    let aud = new Audio()
+    aud.src = `wood${x}.mp3`
+    return aud
+  })
+  let audt = 0
   let fb = new FlipBlock(scene, textures, initLevel, lv => {
     window.location = '#l' + lv
+  }, () => {
+    auds[audt].play()
+    audt = (audt + 1) % auds.length
   })
 
   let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
