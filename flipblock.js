@@ -514,17 +514,15 @@ let onTextureLoad = textures => {
       evt.preventDefault()
       let [dx, dy] = [lastTouch.clientX - tsPoint.clientX, lastTouch.clientY - tsPoint.clientY]
       let mag = Math.sqrt(dx * dx + dy * dy)
-      if (mag >= ((lastTouch.radiusX + lastTouch.radiusY) / 2) * 4) {
-        let ang = Math.atan2(dy, dx) / Math.PI * 180
-        if (ang <= -50 && ang >= -130) {
-          fb.turnUp()
-        } else if (ang >= 140 || ang <= -140) {
-          fb.turnLeft()
-        } else if (ang >= -40 && ang <= 40) {
-          fb.turnRight()
-        } else if (ang >= 50 && ang <= 130) {
-          fb.turnDown()
-        }
+      let ang = Math.atan2(dy, dx) / Math.PI * 180
+      if (ang <= -50 && ang >= -130) {
+        fb.turnUp()
+      } else if (ang >= 140 || ang <= -140) {
+        fb.turnLeft()
+      } else if (ang >= -40 && ang <= 40) {
+        fb.turnRight()
+      } else if (ang >= 50 && ang <= 130) {
+        fb.turnDown()
       }
     }
   })
