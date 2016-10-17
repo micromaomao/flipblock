@@ -482,6 +482,52 @@ let onTextureLoad = textures => {
       fb.turnDown()
     }
   })
+
+  let tsPoint = null
+  window.addEventListener('touchstart', evt => {
+    let touches = evt.touches
+    if (touches.length === 1) {
+      tsPoint = touches[0]
+      evt.preventDefault()
+    }
+  })
+  let lastTouch = null
+  window.addEventListener('touchmove', evt => {
+    if (!tsPoint) {
+      return
+    }
+    evt.preventDefault()
+    let touches = evt.touches
+    if (touches.length === 1) {
+      lastTouch = touches[0]
+    } else {
+      let newTouch = touches.find(touch => touch.identifier === lastTouch.identifier)
+      if (newTouch) {
+        lastTouch = newTouch
+      } else if (touches.length >= 1) {
+        lastTouch = touches[0]
+      }
+    }
+  })
+  window.addEventListener('touchend', evt => {
+    if (tsPoint && lastTouch) {
+      evt.preventDefault()
+      let [dx, dy] = [lastTouch.clientX - tsPoint.clientX, lastTouch.clientY - tsPoint.clientY]
+      let mag = Math.sqrt(dx * dx + dy * dy)
+      if (mag >= ((lastTouch.radiusX + lastTouch.radiusY) / 2) * 8) {
+        let ang = Math.atan2(dy, dx) / Math.PI * 180
+        if (ang <= -50 && ang >= -130) {
+          fb.turnUp()
+        } else if (ang >= 140 || ang <= -140) {
+          fb.turnLeft()
+        } else if (ang >= -40 && ang <= 40) {
+          fb.turnRight()
+        } else if (ang >= 50 && ang <= 130) {
+          fb.turnDown()
+        }
+      }
+    }
+  })
 }
 
 let textureLoader = new THREE.TextureLoader()
