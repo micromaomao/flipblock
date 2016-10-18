@@ -28,6 +28,12 @@ const FlipBlock_Levels = [
     fb.buildGroundTarget(10, 10)
   },
   fb => {
+    fb.groundDrawRect(0, 0, 4, 4)
+    fb.groundEraseRect(1, 1, 2, 2)
+    fb.buildGroundBlock(2, 2)
+    fb.buildGroundTarget(2, 0)
+  },
+  fb => {
     fb.groundDrawRect(0, 0, 3, 3)
     fb.buildGroundTarget(1, 1)
   },
