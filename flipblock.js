@@ -309,6 +309,10 @@ class FlipBlock {
   postTurn () {
     this._boxLight.position.set(this._boxContainer.position.x, this._boxContainer.position.y, this._boxDim.d + 2)
     if (this._onWoodHit) this._onWoodHit()
+    this._determineBlockFail()
+    this._gen.next()
+  }
+  _determineBlockFail () {
     let faces = this.getDownFaceCoords()
     let emptySpace = 0
     let ret = false
@@ -364,6 +368,7 @@ class FlipBlock {
     if (this._isGenerating) {
       clearInterval(this._generatorInterval)
       this._isGenerating = false
+      this._gen = null
     }
     this.clearAll()
     this.initBox(true)
@@ -371,8 +376,10 @@ class FlipBlock {
     let gen = FlipBlock_Levels[lv](this)
     if (!gen || !gen.next) {
       this._isGenerating = false
+      this._gen = null
     } else {
       this._isGenerating = true
+      this._gen = gen
       this._generatorInterval = setInterval(() => {
         gen.next()
       })
