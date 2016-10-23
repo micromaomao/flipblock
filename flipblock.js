@@ -310,7 +310,7 @@ class FlipBlock {
     this._boxLight.position.set(this._boxContainer.position.x, this._boxContainer.position.y, this._boxDim.d + 2)
     if (this._onWoodHit) this._onWoodHit()
     this._determineBlockFail()
-    this._gen.next()
+    if (this._isGenerating) this._gen.next()
   }
   _determineBlockFail () {
     let faces = this.getDownFaceCoords()
@@ -425,6 +425,7 @@ let onTextureLoad = textures => {
     aud.src = `wood${x}.mp3`
     return aud
   })
+  let audioTouch = false
   let audt = 0
   let fb = new FlipBlock(scene, textures, initLevel, lv => {
     window.location = '#l' + lv
@@ -530,6 +531,16 @@ let onTextureLoad = textures => {
         fb.turnRight()
       } else if (ang >= 50 && ang <= 130) {
         fb.turnDown()
+      }
+      if (!audioTouch) {
+        auds.forEach(aud => {
+          let oldsrc = aud.src
+          aud.src = ''
+          aud.play()
+          aud.pause()
+          aud.src = oldsrc
+        })
+        audioTouch = true
       }
     }
   })
