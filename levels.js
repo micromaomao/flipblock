@@ -136,6 +136,11 @@ const FlipBlock_Levels = [
       yield
     }
   },
+  fb => {
+    fb.groundDrawRect(0, 0, 4, 1)
+    fb.buildGroundBlock(3, 1)(1, 1)
+    fb.buildGroundTarget(1, 0)
+  },
   function* (fb) {
     fb.groundDrawRect(0, 0, 10, 10, {color: Colors.VANISH_ON_TOUCH})
     fb.buildGroundTarget(9, 8)
